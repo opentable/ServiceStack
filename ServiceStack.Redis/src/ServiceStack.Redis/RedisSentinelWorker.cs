@@ -134,6 +134,21 @@ namespace ServiceStack.Redis
 
         internal List<string> GetReplicaHosts(string masterName)
         {
+            try
+            {
+                return GetReplicaHostsInternal(masterName);
+            }
+            catch (Exception ex)
+            {
+                if (OnSentinelError != null)
+                    OnSentinelError(ex);
+
+                return new List<string>();
+            }
+        }
+
+        private List<string> GetReplicaHostsInternal(string masterName)
+        {
             List<Dictionary<string, string>> sentinelReplicas;
 
             lock (oLock)
