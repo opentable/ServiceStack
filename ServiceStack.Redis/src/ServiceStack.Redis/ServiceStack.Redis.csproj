@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageId>ServiceStack.Redis</PackageId>
+    <PackageId>OT.ServiceStack.Redis</PackageId>
     <AssemblyName>ServiceStack.Redis</AssemblyName>
     <TargetFrameworks>net472;netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
     <Title>C# Redis client for the Redis NoSQL DB</Title>
