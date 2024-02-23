@@ -136,6 +136,8 @@ public class RedisSentinelResolver : IRedisResolver, IRedisResolverExtended
             }
             catch (Exception ex)
             {
+                log.Error("Failed to validate master role for '{0}'.".Fmt(client.GetHostString()), ex);                
+                
                 Interlocked.Increment(ref RedisState.TotalInvalidMasters);
 
                 if (client.GetHostString() == lastInvalidMasterHost)
@@ -152,9 +154,28 @@ public class RedisSentinelResolver : IRedisResolver, IRedisResolverExtended
 
                             Interlocked.Increment(ref RedisState.TotalForcedMasterFailovers);
 
-                            sentinel.ForceMasterFailover();
+                            Stopwatch failoverWatch = Stopwatch.StartNew();
+                            
+                            try
+                            {
+                                sentinel.ForceMasterFailover();
+                                log.Warn("Forced SENTINEL master failover took {0}ms".Fmt(failoverWatch.ElapsedMilliseconds));
+                            }
+                            catch (Exception failoverException)
+                            {
+                                log.Error("Failed to force SENTINEL master failover after {0}ms.".Fmt(failoverWatch.ElapsedMilliseconds), failoverException);
+                                throw;
+                            }
                             TaskUtils.Sleep(sentinel.WaitBetweenFailedHosts);
-                            role = client.GetServerRole();
+                            try
+                            {
+                                role = client.GetServerRole();
+                            }
+                            catch (Exception secondaryRoleException)
+                            {
+                                log.Error("Failed to resolve client role for '{0}' after forced SENTINEL failover.".Fmt(client.GetHostString()), secondaryRoleException);
+                                throw;
+                            }
                         }
                     }
                 }
